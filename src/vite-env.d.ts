@@ -14,3 +14,23 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv
 }
+
+type SpeechRecognitionConstructor = new () => SpeechRecognition
+
+interface SpeechRecognition extends EventTarget {
+  lang: string
+  continuous: boolean
+  interimResults: boolean
+  maxAlternatives: number
+  onstart: ((this: SpeechRecognition, ev: Event) => unknown) | null
+  onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => unknown) | null
+  onerror: ((this: SpeechRecognition, ev: SpeechRecognitionErrorEvent) => unknown) | null
+  onend: ((this: SpeechRecognition, ev: Event) => unknown) | null
+  start: () => void
+  stop: () => void
+}
+
+interface Window {
+  SpeechRecognition?: SpeechRecognitionConstructor
+  webkitSpeechRecognition?: SpeechRecognitionConstructor
+}

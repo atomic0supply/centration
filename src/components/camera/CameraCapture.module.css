@@ -1,0 +1,151 @@
+.container {
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* ── Media area ── */
+.mediaArea {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: #0a0a0a;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-6);
+}
+
+.video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.previewImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Rule-of-thirds grid overlay */
+.gridOverlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 33.33% 33.33%;
+}
+
+/* ── Error ── */
+.errorMsg {
+  font-size: 13px;
+  color: var(--error);
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  text-align: center;
+}
+
+/* ── Controls area ── */
+.controls {
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+}
+
+/* Idle: two action buttons */
+.idleActions {
+  display: flex;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+/* Camera mode: X — (●) — gallery */
+.cameraControls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0 var(--space-4);
+}
+
+.captureBtn {
+  width: 68px;
+  height: 68px;
+  border-radius: var(--radius-full);
+  background: white;
+  border: none;
+  outline: 6px solid rgba(255, 255, 255, 0.18);
+  outline-offset: 2px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform var(--transition-fast), outline-color var(--transition-fast);
+}
+.captureBtn:hover { outline-color: rgba(255, 255, 255, 0.32); }
+.captureBtn:active { transform: scale(0.89); }
+
+.iconBtn {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  flex-shrink: 0;
+}
+.iconBtn:hover { background: rgba(255, 255, 255, 0.18); }
+.iconBtn:active { background: rgba(255, 255, 255, 0.24); }
+
+/* Preview: retake / confirm */
+.previewControls {
+  display: flex;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+/* Processing */
+.processingControls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.progressBar {
+  height: 4px;
+  background: var(--border);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-light));
+  border-radius: var(--radius-full);
+  transition: width 0.25s ease;
+}
