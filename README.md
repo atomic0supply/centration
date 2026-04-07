@@ -1,73 +1,101 @@
-# React + TypeScript + Vite
+# Concentrate
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+WebApp PWA construida con Vite + React + TypeScript + Firebase.
 
-Currently, two official plugins are available:
+## Firebase Setup (Fase 0.2)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Este repositorio ya incluye la base de configuración para:
 
-## React Compiler
+- Firebase project alias (`.firebaserc`) apuntando a `centrate`
+- Firestore rules por UID (`firestore.rules`)
+- Storage rules para `tickets/{uid}` y `vault/{uid}` (`storage.rules`)
+- Hosting SPA + headers de seguridad (`firebase.json`)
+- Cloud Functions Node.js 20 (`functions/`)
+- Secret Manager integration (`defineSecret` en funciones)
+- CORS template para Storage (`storage.cors.json`)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 1) Requisitos
 
-## Expanding the ESLint configuration
+- Node.js 20+
+- Firebase CLI (`firebase-tools`)
+- Google Cloud SDK (`gcloud`) para aplicar CORS al bucket
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 2) Variables de entorno del frontend
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Crea `.env.local` a partir de `.env.example` y rellena solo variables `VITE_FIREBASE_*`.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## 3) Auth (Email/Password)
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+En Firebase Console:
+
+1. Abre `Authentication`.
+2. Ve a `Sign-in method`.
+3. Habilita `Email/Password`.
+
+## 4) Secret Manager para Functions
+
+```bash
+firebase functions:secrets:set GEMINI_API_KEY
+firebase functions:secrets:set FINNHUB_API_KEY
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Desarrollo local (sin exponer keys en frontend)
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Usa `functions/.secret.local` (ya ignorado por git) con:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+GEMINI_API_KEY=...
+FINNHUB_API_KEY=...
 ```
+
+Para referencia rápida hay una plantilla en `functions/.secret.local.example`.
+
+## 5) Aplicar CORS en Firebase Storage
+
+```bash
+gcloud storage buckets update gs://centrate.firebasestorage.app --cors-file=storage.cors.json
+```
+
+## 6) Instalar dependencias
+
+```bash
+npm install
+cd functions && npm install
+```
+
+## 7) Ejecutar en local
+
+```bash
+npm run dev
+firebase emulators:start
+```
+
+## 8) Deploy
+
+```bash
+npm run build
+firebase deploy --only firestore:rules,storage,hosting,functions
+```
+
+## 9) CI/CD (Fase 0.3)
+
+Se añadió el workflow [`ci-cd.yml`](.github/workflows/ci-cd.yml) con el flujo:
+
+1. `Lint`
+2. `Test`
+3. `Build`
+4. `Deploy` a Firebase Hosting (solo en `push` a `main`)
+
+### Secret obligatorio en GitHub
+
+En `Settings > Secrets and variables > Actions`, crea:
+
+- `FIREBASE_SERVICE_ACCOUNT_CENTRATE` con el JSON de una Service Account con permisos de deploy en Firebase Hosting.
+
+Con ese secret configurado, cada push a `main` compila y publica automáticamente en Hosting.
+
+## Notas de seguridad
+
+- Las claves de Gemini/Finnhub **no** deben ir en el frontend.
+- Cloud Functions valida payloads con `zod` y usa secretos de Secret Manager.
+- `vault/{uid}` exige metadata `encrypted=true` en uploads, como base para el flujo cifrado.

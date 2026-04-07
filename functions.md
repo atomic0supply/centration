@@ -22,7 +22,7 @@
 
 ### 1.2. Portafolio de Inversiones (Real-Time)
 
-- **Multiactivo:** Seguimiento de Crypto (CoinGecko API), ETFs/Acciones (Yahoo Finance API). Entrada de transacciones manual.
+- **Multiactivo:** Seguimiento de Crypto, ETFs y Acciones con **Finnhub API**. Entrada de transacciones manual.
 - **Frecuencia de precios:** Actualización al abrir la sección o manualmente. Caché en Firestore con TTL de 15 minutos.
 - **Métricas Avanzadas:**
   - P&L realizado y no realizado.
@@ -177,7 +177,7 @@ Interfaz de lenguaje natural (Chat) que permite consultas complejas combinando d
 | **Routing** | React Router v7 |
 | **Backend & Auth** | Firebase (Firestore, Auth, Storage, Cloud Functions) |
 | **IA** | Gemini 1.5 Flash (Vision, NLP, Agentes) |
-| **APIs externas** | Alpha Vantage (Crypto + ETFs + Acciones) |
+| **APIs externas** | Finnhub (Crypto + ETFs + Acciones) |
 | **Notificaciones** | Firebase Cloud Messaging (FCM) |
 | **Deploy** | Firebase Hosting + GitHub Actions CI/CD |
 | **PWA** | Vite PWA Plugin (Workbox) |

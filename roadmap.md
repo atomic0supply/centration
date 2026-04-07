@@ -32,7 +32,7 @@
 | 7 | **Plan de tests** | ✅ Resuelto | Vitest + Testing Library (unitario/integración) + Playwright (E2E). Ver `techcnical.md` §14. |
 | 8 | **CI/CD** | ✅ Resuelto | GitHub Actions → Firebase Hosting. Preview en PRs, producción en merge a `main`. Ver `techcnical.md` §10. |
 | 9 | **Manejo de errores de IA** | ✅ Resuelto | Tabla de errores (UNREADABLE, TIMEOUT, INVALID_JSON, QUOTA_EXCEEDED) con respuesta UX para cada caso. Ver `techcnical.md` §6. |
-| 10 | **APIs externas (detalle)** | ✅ Resuelto | CoinGecko + Yahoo Finance proxied via Cloud Functions. Caché Firestore TTL 15min. Fallback a último precio cacheado. Ver `techcnical.md` §15. |
+| 10 | **APIs externas (detalle)** | ✅ Resuelto | Finnhub proxied via Cloud Functions. Caché Firestore TTL 15min. Fallback a último precio cacheado. Ver `techcnical.md` §15. |
 | 11 | **Auth flow completo** | ✅ Resuelto | Email/password, persistent session, ProtectedRoute, reset password, logout por inactividad. Ver `techcnical.md` §7. |
 | 12 | **i18n preparación** | ✅ Resuelto | `src/i18n/es.json` desde inicio. Strings extraídos para facilitar traducción futura. Ver `techcnical.md` §17. |
 | 13 | **Accesibilidad (a11y)** | ✅ Resuelto | WCAG AA, ARIA, focus visible, touch targets 44px, `prefers-reduced-motion`. Ver `design.md` §9 y `techcnical.md` §17. |
@@ -97,7 +97,7 @@ Estas decisiones deben confirmarse antes de empezar el desarrollo.
 | 0.2.4 | Configurar Firebase Auth (email/password) | 🟢 | Provider base, expandible |
 | 0.2.5 | Inicializar Firebase Hosting | 🟢 | Vinculado al proyecto Vite |
 | 0.2.6 | Configurar Cloud Functions (Node.js 20) | 🟡 | Entorno base con Gemini SDK |
-| 0.2.7 | Configurar Secret Manager | 🟡 | API keys de Gemini, CoinGecko, Yahoo Finance |
+| 0.2.7 | Configurar Secret Manager | 🟡 | API keys de Gemini y Finnhub |
 
 ### 0.3 CI/CD y Deploy
 | # | Tarea | Complejidad | Detalle |
@@ -266,7 +266,7 @@ Estas decisiones deben confirmarse antes de empezar el desarrollo.
 ### 5.1 Portafolio de Inversiones
 | # | Tarea | Complejidad | Detalle |
 |---|---|---|---|
-| 5.1.1 | Servicio de APIs externas (CoinGecko + Yahoo Finance) | 🔴 | Cloud Function proxy, caché en Firestore (TTL 15 min), manejo de rate limits |
+| 5.1.1 | Servicio de APIs externas (Finnhub) | 🔴 | Cloud Function proxy, caché en Firestore (TTL 15 min), manejo de rate limits |
 | 5.1.2 | Registro manual de transacciones | 🟡 | Compra/venta con precio, fecha, cantidad |
 | 5.1.3 | Página de portafolio | 🟡 | Lista de posiciones con P&L, precio medio (DCA) |
 | 5.1.4 | Gráficos de rendimiento | 🟡 | Line chart temporal, donut de diversificación |

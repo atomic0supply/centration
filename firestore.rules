@@ -1,0 +1,88 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function createsOwnDoc() {
+      return signedIn() && request.resource.data.uid == request.auth.uid;
+    }
+
+    function ownsExistingDoc() {
+      return signedIn() && resource.data.uid == request.auth.uid;
+    }
+
+    function ownerImmutableOnUpdate() {
+      return request.resource.data.uid == resource.data.uid;
+    }
+
+    match /users/{uid} {
+      allow read, write: if isOwner(uid);
+    }
+
+    match /chat_history/{uid} {
+      allow read, write: if isOwner(uid);
+
+      match /messages/{messageId} {
+        allow read, write: if isOwner(uid);
+      }
+    }
+
+    match /expenses/{docId} {
+      allow create: if createsOwnDoc();
+      allow read, delete: if ownsExistingDoc();
+      allow update: if ownsExistingDoc() && ownerImmutableOnUpdate();
+    }
+
+    match /subscriptions/{docId} {
+      allow create: if createsOwnDoc();
+      allow read, delete: if ownsExistingDoc();
+      allow update: if ownsExistingDoc() && ownerImmutableOnUpdate();
+    }
+
+    match /inventory/{docId} {
+      allow create: if createsOwnDoc();
+      allow read, delete: if ownsExistingDoc();
+      allow update: if ownsExistingDoc() && ownerImmutableOnUpdate();
+    }
+
+    match /assets/{docId} {
+      allow create: if createsOwnDoc();
+      allow read, delete: if ownsExistingDoc();
+      allow update: if ownsExistingDoc() && ownerImmutableOnUpdate();
+    }
+
+    match /investments/{docId} {
+      allow create: if createsOwnDoc();
+      allow read, delete: if ownsExistingDoc();
+      allow update: if ownsExistingDoc() && ownerImmutableOnUpdate();
+    }
+
+    match /networth_snapshots/{docId} {
+      allow create: if createsOwnDoc();
+      allow read, delete: if ownsExistingDoc();
+      allow update: if ownsExistingDoc() && ownerImmutableOnUpdate();
+    }
+
+    match /alerts/{docId} {
+      allow create: if createsOwnDoc();
+      allow read, delete: if ownsExistingDoc();
+      allow update: if ownsExistingDoc() && ownerImmutableOnUpdate();
+    }
+
+    match /shopping_lists/{docId} {
+      allow create: if createsOwnDoc();
+      allow read, delete: if ownsExistingDoc();
+      allow update: if ownsExistingDoc() && ownerImmutableOnUpdate();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

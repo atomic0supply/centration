@@ -1,0 +1,88 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-family: var(--font-sans);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--transition-base), box-shadow var(--transition-base),
+    transform var(--transition-fast), opacity var(--transition-fast);
+  white-space: nowrap;
+  user-select: none;
+  text-decoration: none;
+  letter-spacing: 0.01em;
+}
+.btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Sizes */
+.sm  { height: 32px; padding: 0 var(--space-3); font-size: 13px; border-radius: var(--radius-sm); }
+.md  { height: 40px; padding: 0 var(--space-4); font-size: 14px; border-radius: var(--radius-md); }
+.lg  { height: 48px; padding: 0 var(--space-6); font-size: 15px; border-radius: var(--radius-md); }
+
+/* Variants */
+.primary {
+  background: var(--accent);
+  color: var(--text-primary);
+  border: none;
+}
+.primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+  box-shadow: var(--shadow-accent);
+}
+.primary:active:not(:disabled) {
+  transform: scale(0.975);
+  box-shadow: none;
+}
+
+.secondary {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-strong);
+}
+.secondary:hover:not(:disabled) {
+  background: var(--bg-elevated);
+  border-color: var(--border-strong);
+}
+.secondary:active:not(:disabled) {
+  transform: scale(0.975);
+}
+
+.ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+.ghost:hover:not(:disabled) {
+  background: var(--surface-hover);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+.ghost:active:not(:disabled) {
+  background: var(--surface-active);
+  transform: scale(0.975);
+}
+
+.danger {
+  background: var(--error-bg);
+  color: var(--error);
+  border: 1px solid var(--error-border);
+}
+.danger:hover:not(:disabled) {
+  background: rgba(255, 69, 105, 0.2);
+  box-shadow: 0 4px 16px rgba(255, 69, 105, 0.25);
+}
+.danger:active:not(:disabled) {
+  transform: scale(0.975);
+}
+
+.fullWidth { width: 100%; }
+
+.spinner {
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}

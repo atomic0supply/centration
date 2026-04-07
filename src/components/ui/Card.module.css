@@ -1,0 +1,38 @@
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
+}
+
+.hoverable:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-md);
+}
+
+.clickable {
+  cursor: pointer;
+}
+.clickable:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-md);
+}
+.clickable:active {
+  transform: scale(0.995);
+}
+
+.sm { padding: var(--space-4); border-radius: var(--radius-md); }
+.md { padding: var(--space-6); }
+.lg { padding: var(--space-8); }
+
+.glass {
+  background: var(--glass-bg);
+  border-color: var(--glass-border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.glass:hover {
+  background: var(--glass-bg-strong);
+  border-color: rgba(255, 255, 255, 0.18);
+}

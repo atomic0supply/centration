@@ -41,9 +41,9 @@
 - **Finanzas:** Entrada manual + Parsing de tickets con Gemini. *(PSD2/Open Banking descartado para MVP personal por coste y burocracia).*
 - **Consumo:** Foco España — Mercadona, Carrefour, Lidl y Amazon (foto o PDF/screenshot).
 - **Inversiones:** Entrada de transacciones manual. Precios vía:
-  - **Alpha Vantage API** — Única fuente para Crypto, ETFs y Acciones. Free tier: 25 req/día; Premium si se necesita mayor frecuencia.
+  - **Finnhub API** — Fuente única para Crypto, ETFs y Acciones.
   - **Caché en Firestore:** TTL de 15 minutos para evitar rate limits (crítico en el tier gratuito). Si la API falla, se muestra el último precio cacheado con indicador `[Precio desactualizado]`.
-  - **Frecuencia de actualización:** Solo al abrir la página de inversiones o manualmente (dado el límite del free tier).
+  - **Frecuencia de actualización:** Solo al abrir la página de inversiones o manualmente (respetando límites del plan activo).
 
 ---
 
@@ -431,7 +431,7 @@ concentrate/
 | API | Uso | Tier/Coste | Caché | Fallback |
 |---|---|---|---|---|
 | **Gemini 1.5 Flash** | Tickets, voz, chat | Free tier (60 req/min) | No | Entrada manual |
-| **Alpha Vantage** | Crypto + ETFs + Acciones | Free (25 req/día) / Premium | 15 min en Firestore | Último precio guardado |
+| **Finnhub** | Crypto + ETFs + Acciones | Según plan activo | 15 min en Firestore | Último precio guardado |
 | **Firebase FCM** | Push notifications | Incluido en Firebase | — | In-app solo |
 
 ---

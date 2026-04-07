@@ -6,12 +6,19 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "test": "node --test tests/**/*.test.mjs",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "firebase:emulators": "firebase emulators:start",
+    "firebase:deploy:rules": "firebase deploy --only firestore:rules,storage",
+    "firebase:deploy:hosting": "npm run build && firebase deploy --only hosting",
+    "firebase:deploy:functions": "firebase deploy --only functions",
+    "firebase:cors:apply": "gcloud storage buckets update gs://centrate.firebasestorage.app --cors-file=storage.cors.json"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
     "firebase": "^12.11.0",
     "framer-motion": "^12.38.0",
     "react": "^19.2.4",
