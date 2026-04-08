@@ -3,12 +3,11 @@ import { create } from 'zustand'
 import { subscribeInventory } from '@/services/inventoryService'
 import {
   DEFAULT_INVENTORY_FILTERS,
-  getDaysUntilExpiry,
   getStockStatus,
   type InventoryFiltersState,
   type InventoryItem,
 } from '@/types/inventory'
-import { toDate } from '@/utils/formatters'
+
 
 interface InventoryState {
   items: InventoryItem[]

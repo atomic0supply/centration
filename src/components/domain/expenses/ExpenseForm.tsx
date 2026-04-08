@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react'
 
 import { Button, Input } from '@/components/ui'
 import type { Expense, ExpenseCategory, ExpenseItem } from '@/types/expense'
-import { toDate, toISODateString } from '@/utils/formatters'
+import { toISODateString } from '@/utils/formatters'
 
 import { CategoryChip } from './CategoryChip'
 import styles from './ExpenseForm.module.css'

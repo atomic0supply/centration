@@ -2,7 +2,7 @@ import { useState } from 'react'
 
 import { updateInventoryItem } from '@/services/inventoryService'
 import { useInventoryStore } from '@/stores/inventoryStore'
-import { Button } from '@/components/ui'
+
 import {
   EXPENSE_CATEGORY_EMOJIS,
   EXPENSE_CATEGORY_LABELS,

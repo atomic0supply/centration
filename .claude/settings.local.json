@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(npx create-vite@latest ./ --template react-ts --yes)",
-      "Bash(ls -la /Users/antonio/dev/centration/*.md)"
+      "Bash(ls -la /Users/antonio/dev/centration/*.md)",
+      "Bash(node --test tests/dashboard.test.mjs tests/concierge.test.mjs)"
     ]
   }
 }

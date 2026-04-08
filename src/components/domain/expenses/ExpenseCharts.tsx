@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react'
 import {
   Cell,
-  Legend,
   Line,
   LineChart,
   Pie,
@@ -56,7 +55,8 @@ function useCategoryData(expenses: Expense[]): CategoryData[] {
 
 function CategoryDonutChart({ expenses }: { expenses: Expense[] }) {
   const data = useCategoryData(expenses)
-  const total = data.reduce((s, d) => s + d.value, 0)
+  // total not used for display; kept for reference
+  // const total = data.reduce((s, d) => s + d.value, 0)
 
   if (data.length === 0) {
     return <div className={styles.emptyChart}>Sin datos de gastos</div>
@@ -184,7 +184,7 @@ function useTimeSeriesData(expenses: Expense[], range: TimeRange): TimeDataPoint
 }
 
 function TimeLineChart({ expenses }: { expenses: Expense[] }) {
-  const [range, setRange] = useState<TimeRange>('monthly')
+  const [range] = useState<TimeRange>('monthly')
   const data = useTimeSeriesData(expenses, range)
 
   if (data.length === 0) {

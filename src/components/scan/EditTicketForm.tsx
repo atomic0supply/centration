@@ -54,7 +54,7 @@ export function EditTicketForm({ ticket, onSave, onCancel }: EditTicketFormProps
     watch,
     setValue,
     formState: { errors },
-  } = useForm<FormData>({
+  } = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
       store: ticket.store,

@@ -1,8 +1,5 @@
 import type { Subscription } from '@/types/expense'
-import {
-  SUBSCRIPTION_CATEGORY_COLORS,
-  SUBSCRIPTION_CATEGORY_EMOJIS,
-} from '@/types/expense'
+import { SUBSCRIPTION_CATEGORY_COLORS } from '@/types/expense'
 import { formatCurrency, formatDate, daysUntil } from '@/utils/formatters'
 
 import styles from './SubscriptionCard.module.css'

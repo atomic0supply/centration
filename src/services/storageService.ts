@@ -7,29 +7,29 @@ export interface UploadResult {
   path: string
 }
 
-/**
- * Uploads a compressed ticket image to Firebase Storage.
- * Path: tickets/{uid}/{timestamp}.webp
- */
-export function uploadTicketImage(
+function getCurrentUid(): string {
+  const uid = auth.currentUser?.uid
+  if (!uid) {
+    throw new Error('Usuario no autenticado')
+  }
+  return uid
+}
+
+function sanitizeFileName(fileName: string): string {
+  return fileName
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9._-]/g, '_')
+}
+
+function uploadBlobToStorage(
+  path: string,
   blob: Blob,
+  metadata: { contentType: string; customMetadata: Record<string, string> },
   onProgress?: (percent: number) => void,
 ): Promise<UploadResult> {
-  const uid = auth.currentUser?.uid
-  if (!uid) return Promise.reject(new Error('Usuario no autenticado'))
-
-  const timestamp = Date.now()
-  const path = `tickets/${uid}/${timestamp}.webp`
   const storageRef = ref(storage, path)
-
-  const metadata = {
-    contentType: 'image/webp',
-    customMetadata: {
-      uid,
-      uploadedAt: new Date().toISOString(),
-      source: 'scan',
-    },
-  }
 
   return new Promise((resolve, reject) => {
     const task = uploadBytesResumable(storageRef, blob, metadata)
@@ -37,9 +37,7 @@ export function uploadTicketImage(
     task.on(
       'state_changed',
       (snapshot) => {
-        const percent = Math.round(
-          (snapshot.bytesTransferred / snapshot.totalBytes) * 100,
-        )
+        const percent = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100)
         onProgress?.(percent)
       },
       reject,
@@ -50,4 +48,59 @@ export function uploadTicketImage(
       },
     )
   })
+}
+
+/**
+ * Uploads a compressed ticket image to Firebase Storage.
+ * Path: tickets/{uid}/{timestamp}.webp
+ */
+export function uploadTicketImage(
+  blob: Blob,
+  onProgress?: (percent: number) => void,
+): Promise<UploadResult> {
+  const uid = getCurrentUid()
+  const timestamp = Date.now()
+  const path = `tickets/${uid}/${String(timestamp)}.webp`
+
+  return uploadBlobToStorage(
+    path,
+    blob,
+    {
+      contentType: 'image/webp',
+      customMetadata: {
+        uid,
+        uploadedAt: new Date().toISOString(),
+        source: 'scan',
+      },
+    },
+    onProgress,
+  )
+}
+
+export function uploadAssetPhoto(
+  blob: Blob,
+  onProgress?: (percent: number) => void,
+): Promise<UploadResult> {
+  const uid = getCurrentUid()
+  const maybeFile = blob as File & { name?: string }
+  const originalName = typeof maybeFile.name === 'string' && maybeFile.name.length > 0
+    ? maybeFile.name
+    : 'asset-photo.jpg'
+  const safeName = `${String(Date.now())}-${sanitizeFileName(originalName)}`
+  const path = `asset-photos/${uid}/${safeName}`
+  const contentType = blob.type || maybeFile.type || 'image/jpeg'
+
+  return uploadBlobToStorage(
+    path,
+    blob,
+    {
+      contentType,
+      customMetadata: {
+        uid,
+        uploadedAt: new Date().toISOString(),
+        source: 'asset',
+      },
+    },
+    onProgress,
+  )
 }

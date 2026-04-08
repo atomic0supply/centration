@@ -62,6 +62,18 @@ service cloud.firestore {
       allow update: if ownsExistingDoc() && ownerImmutableOnUpdate();
     }
 
+    match /asset_maintenance/{docId} {
+      allow create: if createsOwnDoc();
+      allow read, delete: if ownsExistingDoc();
+      allow update: if ownsExistingDoc() && ownerImmutableOnUpdate();
+    }
+
+    match /vault_documents/{docId} {
+      allow create: if createsOwnDoc();
+      allow read, delete: if ownsExistingDoc();
+      allow update: if ownsExistingDoc() && ownerImmutableOnUpdate();
+    }
+
     match /investments/{docId} {
       allow create: if createsOwnDoc();
       allow read, delete: if ownsExistingDoc();
@@ -69,6 +81,12 @@ service cloud.firestore {
     }
 
     match /networth_snapshots/{docId} {
+      allow create: if createsOwnDoc();
+      allow read, delete: if ownsExistingDoc();
+      allow update: if ownsExistingDoc() && ownerImmutableOnUpdate();
+    }
+
+    match /portfolio_snapshots/{docId} {
       allow create: if createsOwnDoc();
       allow read, delete: if ownsExistingDoc();
       allow update: if ownsExistingDoc() && ownerImmutableOnUpdate();

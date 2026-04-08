@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { useCallback, useEffect, useState } from 'react'
 
+import { AssetsSection } from '@/components/domain/assets'
 import {
   InventoryCard,
   InventoryFilters,
@@ -21,7 +22,7 @@ import type { InventoryItem } from '@/types/inventory'
 
 import styles from './Inventory.module.css'
 
-type Tab = 'pantry' | 'shopping' | 'voice'
+type Tab = 'pantry' | 'shopping' | 'voice' | 'assets'
 
 function formatQty(value: number | null): string {
   if (value === null) return '-'
@@ -160,15 +161,18 @@ export function Inventory() {
 
       {/* Tabs */}
       <div className={styles.tabs}>
-        <button className={`${styles.tab} ${tab === 'pantry' ? styles.active : ''}`} onClick={() => setTab('pantry')} type="button">
+        <button className={`${styles.tab} ${tab === 'pantry' ? styles.active : ''}`} onClick={() => { setTab('pantry'); }} type="button">
           🏠 Despensa
         </button>
-        <button className={`${styles.tab} ${tab === 'shopping' ? styles.active : ''}`} onClick={() => setTab('shopping')} type="button">
+        <button className={`${styles.tab} ${tab === 'shopping' ? styles.active : ''}`} onClick={() => { setTab('shopping'); }} type="button">
           🛒 Lista de la compra
           {shoppingCount > 0 && <span className={styles.badge}>{shoppingCount}</span>}
         </button>
-        <button className={`${styles.tab} ${tab === 'voice' ? styles.active : ''}`} onClick={() => setTab('voice')} type="button">
+        <button className={`${styles.tab} ${tab === 'voice' ? styles.active : ''}`} onClick={() => { setTab('voice'); }} type="button">
           🎙 Voz
+        </button>
+        <button className={`${styles.tab} ${tab === 'assets' ? styles.active : ''}`} onClick={() => { setTab('assets'); }} type="button">
+          🧱 Activos
         </button>
       </div>
 
@@ -182,7 +186,7 @@ export function Inventory() {
                 <span>
                   {expiring.length === 1
                     ? `${expiring[0].name} caduca pronto`
-                    : `${expiring.length} productos caducan en los próximos 7 días`}
+                    : `${String(expiring.length)} productos caducan en los próximos 7 días`}
                 </span>
               </div>
             )}
@@ -290,6 +294,15 @@ export function Inventory() {
         </AnimatePresence>
       )}
 
+      {/* ── ACTIVOS ── */}
+      {tab === 'assets' && (
+        <AnimatePresence mode="wait">
+          <motion.div key="assets" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
+            <AssetsSection />
+          </motion.div>
+        </AnimatePresence>
+      )}
+
       {/* ── MODALS ── */}
 
       <Modal
@@ -300,7 +313,7 @@ export function Inventory() {
       >
         <InventoryForm
           item={editingItem}
-          onSubmit={handleFormSubmit}
+          onSubmit={(data) => { void handleFormSubmit(data) }}
           onCancel={() => { setShowForm(false); setEditingItem(null) }}
           loading={saving}
         />
@@ -315,13 +328,13 @@ export function Inventory() {
 
       <Modal
         open={!!deleteConfirm}
-        onClose={() => setDeleteConfirm(null)}
+        onClose={() => { setDeleteConfirm(null); }}
         title="Confirmar eliminación"
         maxWidth={380}
         footer={
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', width: '100%' }}>
-            <Button variant="ghost" onClick={() => setDeleteConfirm(null)}>Cancelar</Button>
-            <Button variant="danger" onClick={handleDeleteConfirmed} loading={saving}>Eliminar</Button>
+            <Button variant="ghost" onClick={() => { setDeleteConfirm(null); }}>Cancelar</Button>
+            <Button variant="danger" onClick={() => { void handleDeleteConfirmed() }} loading={saving}>Eliminar</Button>
           </div>
         }
       >
@@ -330,7 +343,7 @@ export function Inventory() {
         </p>
       </Modal>
 
-      <PriceHistoryModal item={historyItem} onClose={() => setHistoryItem(null)} />
+      <PriceHistoryModal item={historyItem} onClose={() => { setHistoryItem(null); }} />
     </div>
   )
 }

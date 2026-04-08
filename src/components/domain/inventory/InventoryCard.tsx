@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { motion, useMotionValue, useTransform } from 'framer-motion'
 
 import { ProgressRing } from '@/components/ui/ProgressRing'

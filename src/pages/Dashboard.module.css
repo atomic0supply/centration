@@ -1,0 +1,217 @@
+/* ── Dashboard Bento Grid ── */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.headerText h1 {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 4px;
+}
+
+.headerText p {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.editBtn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.editBtn:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+.editBtn.active {
+  background: var(--accent-bg);
+  border-color: var(--accent-border);
+  color: var(--accent-light);
+}
+
+/* ── Bento Grid ── */
+
+.bento {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-auto-rows: auto;
+  gap: var(--space-4);
+}
+
+/* Widget size classes — applied to the Reorder.Item wrapper */
+.w2 { grid-column: span 2; }
+.w3 { grid-column: span 3; }
+.w4 { grid-column: span 4; }
+.w6 { grid-column: span 6; }
+.w8 { grid-column: span 8; }
+.w12 { grid-column: span 12; }
+
+/* Responsive breakpoints */
+@media (max-width: 1280px) {
+  .w8 { grid-column: span 12; }
+}
+
+@media (max-width: 960px) {
+  .bento { grid-template-columns: repeat(6, 1fr); }
+  .w2 { grid-column: span 3; }
+  .w3 { grid-column: span 3; }
+  .w4 { grid-column: span 6; }
+  .w6 { grid-column: span 6; }
+  .w8 { grid-column: span 6; }
+  .w12 { grid-column: span 6; }
+}
+
+@media (max-width: 600px) {
+  .bento { grid-template-columns: 1fr; }
+  .w2, .w3, .w4, .w6, .w8, .w12 { grid-column: span 1; }
+}
+
+/* ── Drag-and-drop editing mode ── */
+
+.editOverlay {
+  position: relative;
+}
+
+.editOverlay::after {
+  content: '⠿ Arrastrar';
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  font-size: 11px;
+  color: var(--text-muted);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 2px var(--space-2);
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* ── Widget base ── */
+
+.widget {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-height: 140px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color var(--transition-fast);
+}
+
+.widget:hover {
+  border-color: var(--border-strong);
+}
+
+.widgetHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.widgetTitle {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.widgetIcon {
+  font-size: 16px;
+  opacity: 0.6;
+}
+
+.widgetValue {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.widgetSub {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.widgetPositive {
+  color: var(--success);
+}
+
+.widgetNegative {
+  color: var(--error);
+}
+
+.widgetWarning {
+  color: var(--warning);
+}
+
+/* ── Hidden widget ── */
+
+.hiddenWidget {
+  opacity: 0.4;
+  filter: grayscale(0.8);
+}
+
+/* ── Visibility toggle chips in edit mode ── */
+
+.visibilityChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  background: var(--bg-secondary);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.visibilityChip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  background: var(--surface);
+  color: var(--text-secondary);
+}
+
+.visibilityChip.visible {
+  background: var(--accent-bg);
+  border-color: var(--accent-border);
+  color: var(--accent-light);
+}
+
+.visibilityChip:hover {
+  border-color: var(--border-strong);
+}

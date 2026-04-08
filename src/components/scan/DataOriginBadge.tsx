@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react'
 import type { DataOrigin } from '@/types/ticket'
 
 interface DataOriginBadgeProps {
@@ -8,7 +9,7 @@ interface DataOriginBadgeProps {
 
 const config: Record<
   DataOrigin,
-  { label: string; color: string; bg: string; border: string; icon: JSX.Element }
+  { label: string; color: string; bg: string; border: string; icon: ReactElement }
 > = {
   ai: {
     label: 'IA',
