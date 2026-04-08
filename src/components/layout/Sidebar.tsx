@@ -25,10 +25,8 @@ const navItems = [
 ]
 
 export function Sidebar() {
-  const { collapsed, toggle } = useUiStore((s) => ({
-    collapsed: s.sidebarCollapsed,
-    toggle: s.toggleSidebar,
-  }))
+  const collapsed = useUiStore((s) => s.sidebarCollapsed)
+  const toggle = useUiStore((s) => s.toggleSidebar)
   const signOut = useAuthStore((s) => s.signOut)
 
   return (

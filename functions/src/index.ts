@@ -23,6 +23,7 @@ setGlobalOptions({
 
 const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY')
 const FINNHUB_API_KEY = defineSecret('FINNHUB_API_KEY')
+const GEMINI_MODEL = 'gemini-2.5-flash'
 
 /* ── Schemas ── */
 
@@ -148,7 +149,7 @@ export async function callGeminiForTicket(
   mimeType: string,
 ): Promise<TicketExtraction> {
   const response = await client.models.generateContent({
-    model: 'gemini-1.5-flash',
+    model: GEMINI_MODEL,
     contents: [
       {
         role: 'user',
@@ -178,7 +179,7 @@ export async function callGeminiForVoiceCommand(
   locale: string,
 ): Promise<VoiceInventoryCommand> {
   const response = await client.models.generateContent({
-    model: 'gemini-1.5-flash',
+    model: GEMINI_MODEL,
     contents: [
       {
         role: 'user',
@@ -543,7 +544,7 @@ export const conciergeChat = onRequest(
 
     try {
       const response = await buildGeminiClient().models.generateContent({
-        model: 'gemini-1.5-flash',
+        model: GEMINI_MODEL,
         contents:
           'Eres el Conserje de Concentrate. Responde SIEMPRE como JSON con {"text":"...","richCard":null}. Pregunta del usuario: ' +
           message,
@@ -634,8 +635,8 @@ export const processTicketUpload = onObjectFinalized(
     const object = event.data
     const objectName: string = object.name
 
-    // 2.2.1 — Only process files under tickets/{uid}/...
-    if (!objectName.startsWith('tickets/')) return
+    // 2.2.1 — Only process files under background-tickets/{uid}/... (disabled for interactive flow)
+    if (!objectName.startsWith('background-tickets/')) return
 
     const pathParts = objectName.split('/')
     if (pathParts.length < 3) {
@@ -744,5 +745,308 @@ export const monthlyNetworthSnapshot = onSchedule(
   () => {
     logger.info('Monthly net worth snapshot schedule triggered')
     // TODO: implement aggregate net worth snapshot write in Phase 3.
+  },
+)
+
+export const extractTicket = onCall(
+  { secrets: [GEMINI_API_KEY], timeoutSeconds: 60, memory: '1GiB' },
+  async (request) => {
+    const uid = request.auth?.uid
+    if (!uid) throw new HttpsError('unauthenticated', 'UNAUTHORIZED')
+
+    const path = request.data?.path
+    if (!path) throw new HttpsError('invalid-argument', 'MISSING_PATH')
+
+    const db = getFirestore()
+
+    let imageBase64: string
+    let contentType = 'image/webp'
+    try {
+      const bucket = getStorage().bucket()
+      const file = bucket.file(path)
+      const [metadata] = await file.getMetadata()
+      contentType = metadata.contentType || contentType
+      const [buffer] = await file.download()
+      imageBase64 = buffer.toString('base64')
+    } catch (err) {
+      const storageErr = err as { message?: string }
+      logger.error('Failed to download ticket image from storage', { path, err })
+      throw new HttpsError('internal', 'COULD_NOT_READ_IMAGE', {
+        message: storageErr.message ?? String(err),
+      })
+    }
+
+    try {
+      const extraction = await callGeminiForTicket(buildGeminiClient(), imageBase64, contentType)
+      return { ok: true, data: extraction }
+    } catch (err) {
+      const apiErr = err as { status?: number; message?: string }
+      logger.error('Gemini extraction failed', {
+        status: apiErr.status ?? null,
+        message: apiErr.message ?? String(err),
+      })
+      throw new HttpsError('internal', 'EXTRACTION_FAILED', {
+        status: apiErr.status ?? null,
+        message: apiErr.message ?? String(err),
+      })
+    }
+  }
+)
+
+export const confirmTicket = onCall(
+  { timeoutSeconds: 60, memory: '512MiB' },
+  async (request) => {
+    const uid = request.auth?.uid
+    if (!uid) throw new HttpsError('unauthenticated', 'UNAUTHORIZED')
+
+    const { extraction, sourcePath } = request.data
+    const db = getFirestore()
+
+    try {
+      const expenseId = await writeExpense(db, uid, extraction, sourcePath || '')
+      await upsertInventoryItems(db, uid, extraction)
+      
+      if (isPotentialAsset(extraction.category, extraction.total ?? undefined)) {
+        await writePotentialAssetAlert(db, uid, extraction, expenseId)
+      }
+      
+      return { ok: true, expenseId }
+    } catch (err) {
+      logger.error('Failed to confirm ticket', { err })
+      throw new HttpsError('internal', 'FAILED_TO_SAVE')
+    }
+  }
+)
+
+/* ── 3.2.3 — Detect subscriptions from recurring expenses ── */
+export const detectSubscriptions = onSchedule(
+  {
+    schedule: '0 3 * * *', // Daily at 3am
+    timeZone: 'Europe/Madrid',
+  },
+  async () => {
+    const db = getFirestore()
+    logger.info('Starting subscription detection scan')
+
+    // Get all unique UIDs from expenses
+    const allExpenses = await db.collection('expenses').get()
+    const uidSet = new Set<string>()
+    allExpenses.docs.forEach((doc) => {
+      const uid = doc.data().uid as string
+      if (uid) uidSet.add(uid)
+    })
+
+    for (const uid of uidSet) {
+      try {
+        // Fetch expenses for this user from the last 90 days
+        const ninetyDaysAgo = new Date()
+        ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90)
+
+        const expSnapshot = await db
+          .collection('expenses')
+          .where('uid', '==', uid)
+          .where('date', '>=', Timestamp.fromDate(ninetyDaysAgo))
+          .get()
+
+        // Group by provider (normalized)
+        const providerCharges = new Map<string, { dates: Date[]; amounts: number[]; category: string }>()
+
+        for (const doc of expSnapshot.docs) {
+          const data = doc.data()
+          const provider = ((data.provider as string) ?? '').trim().toLowerCase()
+          if (!provider || provider === 'desconocido') continue
+
+          const date = data.date instanceof Timestamp ? data.date.toDate() : new Date()
+          const amount = (data.amount as number) ?? (data.total as number) ?? 0
+
+          const entry = providerCharges.get(provider) ?? { dates: [], amounts: [], category: (data.category as string) ?? 'other' }
+          entry.dates.push(date)
+          entry.amounts.push(amount)
+          providerCharges.set(provider, entry)
+        }
+
+        // Detect recurring: ≥2 charges with similar amounts in consecutive months
+        const existingSubs = await db.collection('subscriptions').where('uid', '==', uid).get()
+        const existingNames = new Set(
+          existingSubs.docs.map((d) => ((d.data().name as string) ?? '').trim().toLowerCase()),
+        )
+
+        for (const [provider, data] of providerCharges) {
+          if (data.dates.length < 2) continue
+          if (existingNames.has(provider)) continue
+
+          // Check if amounts are similar (within 20% tolerance)
+          const avgAmount = data.amounts.reduce((a, b) => a + b, 0) / data.amounts.length
+          const allSimilar = data.amounts.every(
+            (a) => Math.abs(a - avgAmount) / avgAmount < 0.2,
+          )
+
+          if (!allSimilar) continue
+
+          // Check if they appear in different months
+          const months = new Set(
+            data.dates.map((d) => `${d.getFullYear()}-${d.getMonth()}`),
+          )
+          if (months.size < 2) continue
+
+          // Detected a recurring subscription! Create it.
+          const lastDate = data.dates.sort((a, b) => b.getTime() - a.getTime())[0]
+          const nextPayment = new Date(lastDate)
+          nextPayment.setMonth(nextPayment.getMonth() + 1)
+
+          const categoryMap: Record<string, string> = {
+            leisure: 'streaming',
+            tech: 'saas',
+            health: 'gym',
+            other: 'other',
+          }
+
+          await db.collection('subscriptions').add({
+            uid,
+            name: provider.charAt(0).toUpperCase() + provider.slice(1),
+            logo: null,
+            amount: Math.round(avgAmount * 100) / 100,
+            currency: 'EUR',
+            billingCycle: 'monthly',
+            nextPaymentDate: Timestamp.fromDate(nextPayment),
+            category: categoryMap[data.category] ?? 'other',
+            status: 'active',
+            trialEndsAt: null,
+            sharedWith: [],
+            autoDetected: true,
+            createdAt: FieldValue.serverTimestamp(),
+          })
+
+          // Create an alert to notify the user
+          await db.collection('alerts').add({
+            uid,
+            type: 'subscription_detected',
+            title: `Suscripción detectada: ${provider.charAt(0).toUpperCase() + provider.slice(1)}`,
+            body: `Se detectaron ${data.dates.length} cobros recurrentes de ~${avgAmount.toFixed(2)}€/mes. Revisa en Suscripciones.`,
+            severity: 'info',
+            read: false,
+            scheduledFor: Timestamp.now(),
+            createdAt: FieldValue.serverTimestamp(),
+          })
+
+          logger.info('Auto-detected subscription', { uid, provider, avgAmount, charges: data.dates.length })
+        }
+      } catch (err) {
+        logger.error('Subscription detection failed for user', { uid, err })
+      }
+    }
+
+    logger.info('Subscription detection scan complete')
+  },
+)
+
+/* ── 3.2.5 — Renewal alerts for upcoming subscription charges ── */
+export const subscriptionRenewalAlerts = onSchedule(
+  {
+    schedule: '0 9 * * *', // Daily at 9am
+    timeZone: 'Europe/Madrid',
+  },
+  async () => {
+    const db = getFirestore()
+    logger.info('Starting subscription renewal alert scan')
+
+    const allSubs = await db
+      .collection('subscriptions')
+      .where('status', 'in', ['active', 'trial'])
+      .get()
+
+    const now = new Date()
+
+    for (const subDoc of allSubs.docs) {
+      const data = subDoc.data()
+      const uid = data.uid as string
+      const name = data.name as string
+      const amount = data.amount as number
+      const nextPayment = data.nextPaymentDate instanceof Timestamp
+        ? data.nextPaymentDate.toDate()
+        : null
+
+      if (!nextPayment || !uid) continue
+
+      // Get user's notification preferences (default: 7 days for renewal)
+      let renewalDaysAhead = 7
+      try {
+        const userDoc = await db.collection('users').doc(uid).get()
+        if (userDoc.exists) {
+          const prefs = userDoc.data()?.notificationPrefs as { renewalDaysAhead?: number } | undefined
+          if (prefs?.renewalDaysAhead) {
+            renewalDaysAhead = prefs.renewalDaysAhead
+          }
+        }
+      } catch {
+        // Use default
+      }
+
+      const daysUntil = Math.ceil((nextPayment.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+
+      // Check if trial is ending
+      if (data.status === 'trial' && data.trialEndsAt) {
+        const trialEnd = data.trialEndsAt instanceof Timestamp ? data.trialEndsAt.toDate() : null
+        if (trialEnd) {
+          const trialDaysLeft = Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+          if (trialDaysLeft <= renewalDaysAhead && trialDaysLeft >= 0) {
+            // Check if we already sent an alert for this
+            const existingAlert = await db
+              .collection('alerts')
+              .where('uid', '==', uid)
+              .where('type', '==', 'trial_ending')
+              .where('relatedId', '==', subDoc.id)
+              .where('read', '==', false)
+              .limit(1)
+              .get()
+
+            if (existingAlert.empty) {
+              await db.collection('alerts').add({
+                uid,
+                type: 'trial_ending',
+                title: `Prueba de ${name} termina pronto`,
+                body: `Tu periodo de prueba de ${name} termina en ${trialDaysLeft} días. Se te cobrará ${amount.toFixed(2)}€/${data.billingCycle === 'monthly' ? 'mes' : 'año'}.`,
+                relatedId: subDoc.id,
+                severity: 'warning',
+                read: false,
+                scheduledFor: Timestamp.now(),
+                createdAt: FieldValue.serverTimestamp(),
+              })
+              logger.info('Trial ending alert created', { uid, name, trialDaysLeft })
+            }
+          }
+        }
+      }
+
+      // Check upcoming renewal
+      if (daysUntil <= renewalDaysAhead && daysUntil >= 0) {
+        // Check if we already sent an alert for this renewal
+        const existingAlert = await db
+          .collection('alerts')
+          .where('uid', '==', uid)
+          .where('type', '==', 'renewal')
+          .where('relatedId', '==', subDoc.id)
+          .where('read', '==', false)
+          .limit(1)
+          .get()
+
+        if (existingAlert.empty) {
+          await db.collection('alerts').add({
+            uid,
+            type: 'renewal',
+            title: `Cobro próximo: ${name}`,
+            body: `${name} se cobra en ${daysUntil} día${daysUntil !== 1 ? 's' : ''} (${amount.toFixed(2)}€/${data.billingCycle === 'monthly' ? 'mes' : 'año'}).`,
+            relatedId: subDoc.id,
+            severity: daysUntil <= 1 ? 'warning' : 'info',
+            read: false,
+            scheduledFor: Timestamp.now(),
+            createdAt: FieldValue.serverTimestamp(),
+          })
+          logger.info('Renewal alert created', { uid, name, daysUntil })
+        }
+      }
+    }
+
+    logger.info('Subscription renewal alert scan complete')
   },
 )

@@ -5,6 +5,7 @@ import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import { Toaster } from '@/components/ui'
 import { Concierge } from '@/pages/Concierge'
 import { Dashboard } from '@/pages/Dashboard'
+import { ExpenseDetail } from '@/pages/ExpenseDetail'
 import { Inventory } from '@/pages/Inventory'
 import { Ledger } from '@/pages/Ledger'
 import { Login } from '@/pages/Login'
@@ -24,6 +25,7 @@ export default function App() {
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/ledger" element={<Ledger />} />
+            <Route path="/ledger/:id" element={<ExpenseDetail />} />
             <Route path="/inventory" element={<Inventory />} />
             <Route path="/concierge" element={<Concierge />} />
             <Route path="/settings" element={<Settings />} />

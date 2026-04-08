@@ -1,0 +1,42 @@
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.chip:hover {
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+}
+
+.chip.active {
+  box-shadow: 0 0 12px rgba(var(--chip-rgb, 148, 163, 184), 0.35);
+}
+
+.chip .emoji {
+  font-size: 13px;
+  line-height: 1;
+}
+
+.chipAll {
+  background: var(--surface);
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+
+.chipAll.active {
+  background: var(--accent-bg);
+  color: var(--accent-light);
+  border-color: var(--accent-border);
+  box-shadow: var(--shadow-accent);
+}

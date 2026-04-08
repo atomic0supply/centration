@@ -6,7 +6,7 @@ import { EditTicketForm } from '@/components/scan/EditTicketForm'
 import { SummaryCard } from '@/components/scan/SummaryCard'
 import { SkeletonCard, SkeletonText } from '@/components/ui'
 import { useToast } from '@/hooks/useToast'
-import { mockExtractTicket, saveTicket } from '@/services/ticketService'
+import { analyzeTicketReal, saveTicket } from '@/services/ticketService'
 import type { ExtractedTicket } from '@/types/ticket'
 
 type Stage = 'capture' | 'analyzing' | 'review' | 'editing' | 'saving' | 'done'
@@ -22,11 +22,12 @@ export function Scan() {
     setCaptureResult(result)
     setStage('analyzing')
     try {
-      const extracted = await mockExtractTicket(result.url)
+      const extracted = await analyzeTicketReal(result.path, result.url)
       setTicket(extracted)
       setStage('review')
-    } catch {
-      error('Error al analizar imagen', 'Intenta de nuevo con una imagen más nítida')
+    } catch (e: unknown) {
+      const details = e instanceof Error ? e.message : 'Intenta de nuevo con una imagen más nítida'
+      error('Error al analizar imagen', details)
       setStage('capture')
     }
   }
